@@ -278,7 +278,7 @@ function calculateSubsidy(capacityKw) {
 }
 
 // Client-side Solar Potential Engine
-function computeSolarPotential(roofPts, obsList, tariff = 8.0) {
+function computeSolarPotential(roofPts, obsList, tariff = 8.0, isHouseholder = true) {
   const grossArea = calculatePolygonArea(roofPts);
   if (grossArea < 3) return null;
 
@@ -296,7 +296,7 @@ function computeSolarPotential(roofPts, obsList, tariff = 8.0) {
   const generationKwhYr = capacityKw * 1400;
   const costPerKw = 60000;
   const totalCost = capacityKw * costPerKw;
-  const subsidy = calculateSubsidy(capacityKw);
+  const subsidy = isHouseholder ? calculateSubsidy(capacityKw) : 0;
   const netCost = totalCost - subsidy;
   const annualSavings = generationKwhYr * tariff;
   const paybackYears = annualSavings > 0 ? netCost / annualSavings : 0;
@@ -941,14 +941,15 @@ export default function App() {
   const [satelliteMode, setSatelliteMode] = useState('esri'); // 'esri' | 'osm'
   const [tariff, setTariff] = useState(8.0);
   const [unitImperial, setUnitImperial] = useState(false);
+  const [isHouseholder, setIsHouseholder] = useState(true);
   const [loading, setLoading] = useState(false);
   const [exportingPdf, setExportingPdf] = useState(false);
   const [history, setHistory] = useState([]);
 
   // Client-side real-time calculation
   const result = useMemo(() => {
-    return computeSolarPotential(roofPoints, obstructions, tariff);
-  }, [roofPoints, obstructions, tariff]);
+    return computeSolarPotential(roofPoints, obstructions, tariff, isHouseholder);
+  }, [roofPoints, obstructions, tariff, isHouseholder]);
 
   // Solar panel grid simulation overlay
   const panelGrid = useMemo(() => {
@@ -1238,6 +1239,43 @@ export default function App() {
             </div>
           )}
 
+          {/* ── PM Surya Ghar Eligibility Toggle ── */}
+          {roofPoints.length >= 3 && (
+            <div className="bg-gray-800/40 border border-gray-700/50 rounded-2xl p-4 shadow-sm backdrop-blur-sm">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2.5">
+                  <div className={`p-1.5 rounded-lg ${isHouseholder ? 'bg-amber-500/20 text-amber-400' : 'bg-gray-600/20 text-gray-500'} transition-colors`}>
+                    <Sun className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <p className="text-xs font-bold text-gray-200">PM Surya Ghar Yojana</p>
+                    <p className="text-[10px] text-gray-400 mt-0.5">
+                      {isHouseholder ? 'Residential subsidy applied' : 'Non-residential — no subsidy'}
+                    </p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setIsHouseholder(!isHouseholder)}
+                  className={`relative w-12 h-6 rounded-full transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-amber-500/50 ${
+                    isHouseholder ? 'bg-amber-500' : 'bg-gray-600'
+                  }`}
+                >
+                  <span
+                    className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white shadow-md transition-transform duration-300 ${
+                      isHouseholder ? 'translate-x-6' : 'translate-x-0'
+                    }`}
+                  />
+                </button>
+              </div>
+              {!isHouseholder && (
+                <div className="mt-2.5 bg-yellow-950/40 border border-yellow-800/40 rounded-xl px-3 py-2 text-[11px] text-yellow-300/90 flex items-start gap-2">
+                  <Info className="w-3.5 h-3.5 mt-0.5 shrink-0 text-yellow-400" />
+                  <span>PM Surya Ghar subsidy is available only for residential households. Commercial, institutional, and industrial buildings are not eligible for the CFA subsidy.</span>
+                </div>
+              )}
+            </div>
+          )}
+
           {/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
               CALCULATION RESULTS & SYSTEM SIZING
           ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
@@ -1322,8 +1360,8 @@ export default function App() {
                   <FinancialRow label="Estimated Gross Cost" value={`₹${result.total_cost_inr.toLocaleString()}`} />
                   <FinancialRow
                     label="PM Surya Ghar Subsidy (CFA)"
-                    value={`- ₹${result.subsidy_inr.toLocaleString()}`}
-                    accent="text-emerald-400 font-bold"
+                    value={isHouseholder ? `- ₹${result.subsidy_inr.toLocaleString()}` : '₹0 (Not Eligible)'}
+                    accent={isHouseholder ? 'text-emerald-400 font-bold' : 'text-gray-500'}
                   />
                   <div className="h-px bg-emerald-800/40 my-1.5" />
                   <FinancialRow
