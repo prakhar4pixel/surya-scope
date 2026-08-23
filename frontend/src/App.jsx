@@ -1043,15 +1043,7 @@ export default function App() {
       });
 
       const url = window.URL.createObjectURL(new Blob([response.data], { type: 'application/pdf' }));
-      setPdfBlobUrl(url);
-
-      // Auto-download
-      const link = document.createElement('a');
-      link.href = url;
-      link.setAttribute('download', `SuryaScope_Report_${address.split(',')[0].replace(/\s+/g, '_')}.pdf`);
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
+      return url;
     } catch (err) {
       console.warn('Backend PDF endpoint unreachable, providing client report information.', err);
       alert(
@@ -1059,6 +1051,7 @@ export default function App() {
         'Please ensure the backend is available to download the full PDF report.\n\n' +
         `Summary:\n- Usable Area: ${result.usable_area_sqm} m²\n- Capacity: ${result.capacity_kw} kWp\n- PM Surya Ghar Subsidy: ₹${result.subsidy_inr.toLocaleString()}\n- Net Cost: ₹${result.net_cost_inr.toLocaleString()}`
       );
+      return null;
     } finally {
       setExportingPdf(false);
     }
@@ -1617,8 +1610,7 @@ export default function App() {
           result={result}
           address={address}
           isHouseholder={isHouseholder}
-          exportingPdf={exportingPdf}
-          onDownload={generateReport}
+          onGenerateReport={generateReport}
           onClose={() => { setShowPreview(false); if (pdfBlobUrl) { window.URL.revokeObjectURL(pdfBlobUrl); setPdfBlobUrl(null); } }}
         />
       )}
@@ -1656,7 +1648,29 @@ function FinancialRow({ label, value, accent, bold }) {
 // REPORT PREVIEW MODAL
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-function ReportPreviewModal({ result, address, isHouseholder, exportingPdf, onDownload, onClose }) {
+function ReportPreviewModal({ result, address, isHouseholder, onGenerateReport, onClose }) {
+  const [blobUrl, setBlobUrl] = useState(null);
+  const [isGenerating, setIsGenerating] = useState(true);
+
+  useEffect(() => {
+    let active = true;
+    const generate = async () => {
+      setIsGenerating(true);
+      const url = await onGenerateReport();
+      if (active && url) {
+        setBlobUrl(url);
+      }
+      if (active) setIsGenerating(false);
+    };
+    generate();
+    return () => {
+      active = false;
+      if (blobUrl) window.URL.revokeObjectURL(blobUrl);
+    };
+  }, []);
+
+  const filename = `SuryaScope_Report_${address.split(',')[0].replace(/\s+/g, '_')}.pdf`;
+
   return (
     <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/70 backdrop-blur-sm animate-fadeIn">
       <div className="bg-gray-900 border border-gray-700 rounded-3xl shadow-2xl w-[680px] max-h-[90vh] flex flex-col overflow-hidden">
@@ -1811,27 +1825,32 @@ function ReportPreviewModal({ result, address, isHouseholder, exportingPdf, onDo
           >
             Close
           </button>
-          <button
-            onClick={onDownload}
-            disabled={exportingPdf}
-            className={`flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-xl font-bold text-white shadow-xl transition-all text-sm ${
-              exportingPdf
-                ? 'bg-gray-700 cursor-wait'
-                : 'bg-gradient-to-r from-amber-500 via-orange-500 to-rose-600 hover:from-amber-600 hover:to-orange-600 active:scale-[0.98] shadow-amber-500/20'
-            }`}
-          >
-            {exportingPdf ? (
-              <>
-                <Loader2 className="w-4 h-4 animate-spin" />
-                Generating PDF...
-              </>
-            ) : (
-              <>
-                <Download className="w-4 h-4" />
-                Download SuryaScope PDF Report
-              </>
-            )}
-          </button>
+          
+          {isGenerating ? (
+            <button
+              disabled
+              className="flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-xl font-bold text-white shadow-xl transition-all text-sm bg-gray-700 cursor-wait"
+            >
+              <Loader2 className="w-4 h-4 animate-spin" />
+              Generating PDF...
+            </button>
+          ) : blobUrl ? (
+            <a
+              href={blobUrl}
+              download={filename}
+              className="flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-xl font-bold text-white shadow-xl transition-all text-sm bg-gradient-to-r from-amber-500 via-orange-500 to-rose-600 hover:from-amber-600 hover:to-orange-600 active:scale-[0.98] shadow-amber-500/20"
+            >
+              <Download className="w-4 h-4" />
+              Download SuryaScope PDF Report
+            </a>
+          ) : (
+            <button
+              disabled
+              className="flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-xl font-bold text-white shadow-xl transition-all text-sm bg-red-900/80 text-red-200 cursor-not-allowed"
+            >
+              Failed to generate report
+            </button>
+          )}
         </div>
       </div>
     </div>
