@@ -1027,7 +1027,7 @@ export default function App() {
         address,
       };
 
-      const response = await axios.post('http://localhost:8000/api/generate-report', payload, {
+      const response = await axios.post('/api/generate-report', payload, {
         responseType: 'blob',
         timeout: 10000,
       });
@@ -1042,8 +1042,8 @@ export default function App() {
     } catch (err) {
       console.warn('Backend PDF endpoint unreachable, providing client report information.', err);
       alert(
-        'Backend server is not running at http://localhost:8000. ' +
-        'Please start the Python backend (python main.py) to download the full PDF report.\n\n' +
+        'Backend server is not running or accessible. ' +
+        'Please ensure the backend is available to download the full PDF report.\n\n' +
         `Summary:\n- Usable Area: ${result.usable_area_sqm} m²\n- Capacity: ${result.capacity_kw} kWp\n- PM Surya Ghar Subsidy: ₹${result.subsidy_inr.toLocaleString()}\n- Net Cost: ₹${result.net_cost_inr.toLocaleString()}`
       );
     } finally {
