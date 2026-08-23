@@ -22,6 +22,8 @@ import {
   Search,
   MapPin,
   X,
+  Eye,
+  Download,
   ShieldAlert,
   Droplets,
   Wind,
@@ -944,6 +946,8 @@ export default function App() {
   const [isHouseholder, setIsHouseholder] = useState(true);
   const [loading, setLoading] = useState(false);
   const [exportingPdf, setExportingPdf] = useState(false);
+  const [showPreview, setShowPreview] = useState(false);
+  const [pdfBlobUrl, setPdfBlobUrl] = useState(null);
   const [history, setHistory] = useState([]);
 
   // Client-side real-time calculation
@@ -1010,12 +1014,18 @@ export default function App() {
     setToolMode(null);
   };
 
-  // Generate Vendor PDF Report with backend fallback
-  const generateReport = async () => {
+  // Open report preview modal
+  const openReportPreview = () => {
     if (!result || roofPoints.length < 3) {
       alert('Please draw a rooftop outline on the map first.');
       return;
     }
+    setShowPreview(true);
+  };
+
+  // Generate Vendor PDF Report with backend fallback
+  const generateReport = async () => {
+    if (!result || roofPoints.length < 3) return;
     setExportingPdf(true);
     try {
       const payload = {
@@ -1033,6 +1043,9 @@ export default function App() {
       });
 
       const url = window.URL.createObjectURL(new Blob([response.data], { type: 'application/pdf' }));
+      setPdfBlobUrl(url);
+
+      // Auto-download
       const link = document.createElement('a');
       link.href = url;
       link.setAttribute('download', `SuryaScope_Report_${address.split(',')[0].replace(/\s+/g, '_')}.pdf`);
@@ -1399,28 +1412,19 @@ export default function App() {
           )}
         </div>
 
-        {/* ─── Footer Action: Download Report ─── */}
+        {/* ─── Footer Action: Preview Report ─── */}
         <div className="p-4 border-t border-gray-800 bg-gray-900/90 space-y-2">
           <button
-            onClick={generateReport}
-            disabled={!result || exportingPdf}
+            onClick={openReportPreview}
+            disabled={!result}
             className={`w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl font-bold text-white shadow-xl transition-all text-sm ${
-              !result || exportingPdf
+              !result
                 ? 'bg-gray-800 text-gray-500 border border-gray-700 cursor-not-allowed opacity-50'
                 : 'bg-gradient-to-r from-amber-500 via-orange-500 to-rose-600 hover:from-amber-600 hover:to-orange-600 active:scale-[0.98] shadow-amber-500/20'
             }`}
           >
-            {exportingPdf ? (
-              <>
-                <Loader2 className="w-4 h-4 animate-spin" />
-                Generating SuryaScope PDF...
-              </>
-            ) : (
-              <>
-                <FileText className="w-4 h-4" />
-                Download SuryaScope PDF Report
-              </>
-            )}
+            <Eye className="w-4 h-4" />
+            Preview &amp; Download Report
           </button>
         </div>
       </div>
@@ -1607,6 +1611,17 @@ export default function App() {
           </div>
         )}
       </div>
+      {/* ── Report Preview Modal ── */}
+      {showPreview && result && (
+        <ReportPreviewModal
+          result={result}
+          address={address}
+          isHouseholder={isHouseholder}
+          exportingPdf={exportingPdf}
+          onDownload={generateReport}
+          onClose={() => { setShowPreview(false); if (pdfBlobUrl) { window.URL.revokeObjectURL(pdfBlobUrl); setPdfBlobUrl(null); } }}
+        />
+      )}
     </div>
   );
 }
@@ -1633,6 +1648,192 @@ function FinancialRow({ label, value, accent, bold }) {
       <span className={`font-semibold font-['Outfit'] ${bold ? 'text-sm text-emerald-300 font-bold' : accent || 'text-gray-100'}`}>
         {value}
       </span>
+    </div>
+  );
+}
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// REPORT PREVIEW MODAL
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+function ReportPreviewModal({ result, address, isHouseholder, exportingPdf, onDownload, onClose }) {
+  return (
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/70 backdrop-blur-sm animate-fadeIn">
+      <div className="bg-gray-900 border border-gray-700 rounded-3xl shadow-2xl w-[680px] max-h-[90vh] flex flex-col overflow-hidden">
+        {/* Modal Header */}
+        <div className="bg-gradient-to-r from-amber-500 via-orange-500 to-rose-600 px-6 py-4 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-white/20 backdrop-blur-md flex items-center justify-center border border-white/30">
+              <Sun className="w-6 h-6 text-yellow-100" />
+            </div>
+            <div>
+              <h2 className="text-lg font-extrabold text-white font-['Outfit']">SuryaScope Report Preview</h2>
+              <p className="text-xs text-amber-100">Solar Feasibility Analysis</p>
+            </div>
+          </div>
+          <button
+            onClick={onClose}
+            className="p-2 rounded-xl bg-white/20 hover:bg-white/30 text-white transition"
+          >
+            <X className="w-5 h-5" />
+          </button>
+        </div>
+
+        {/* Scrollable Report Content */}
+        <div className="flex-1 overflow-y-auto p-6 space-y-5">
+          {/* Site Info */}
+          <div className="bg-gray-800/60 border border-gray-700/50 rounded-2xl p-4 space-y-2">
+            <div className="flex items-center gap-2 mb-2">
+              <MapPin className="w-4 h-4 text-amber-400" />
+              <h3 className="text-sm font-bold text-gray-200 uppercase tracking-wider">Site Details</h3>
+            </div>
+            <div className="grid grid-cols-2 gap-3 text-xs">
+              <div>
+                <p className="text-gray-400 font-semibold">Location</p>
+                <p className="text-gray-100 font-medium mt-0.5 break-words">{address}</p>
+              </div>
+              <div>
+                <p className="text-gray-400 font-semibold">Gross Roof Area</p>
+                <p className="text-gray-100 font-bold mt-0.5 font-['Outfit']">{result.gross_area_sqm} m²</p>
+              </div>
+              <div>
+                <p className="text-gray-400 font-semibold">Obstruction Area</p>
+                <p className="text-red-400 font-bold mt-0.5 font-['Outfit']">-{result.obstruction_area_sqm} m²</p>
+              </div>
+              <div>
+                <p className="text-gray-400 font-semibold">Net Usable Area</p>
+                <p className="text-amber-300 font-bold mt-0.5 font-['Outfit']">{result.usable_area_sqm} m²</p>
+              </div>
+            </div>
+          </div>
+
+          {/* System Sizing */}
+          <div className="bg-gradient-to-br from-blue-950/60 via-blue-900/30 to-indigo-950/60 border border-blue-700/50 rounded-2xl p-4 space-y-3">
+            <div className="flex items-center gap-2">
+              <Zap className="w-4 h-4 text-blue-400" />
+              <h3 className="text-sm font-bold text-blue-200 uppercase tracking-wider">System Sizing & PV Potential</h3>
+            </div>
+            <div className="overflow-x-auto">
+              <table className="w-full text-xs">
+                <thead>
+                  <tr className="bg-blue-800/40">
+                    <th className="text-left px-3 py-2 text-blue-200 font-bold rounded-tl-lg">Parameter</th>
+                    <th className="text-right px-3 py-2 text-blue-200 font-bold rounded-tr-lg">Value</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-blue-800/30">
+                  <tr className="hover:bg-blue-900/20 transition">
+                    <td className="px-3 py-2 text-gray-300">Recommended System Capacity</td>
+                    <td className="px-3 py-2 text-right text-white font-bold font-['Outfit']">{result.capacity_kw} kWp</td>
+                  </tr>
+                  <tr className="hover:bg-blue-900/20 transition">
+                    <td className="px-3 py-2 text-gray-300">Panel Count (500Wp each)</td>
+                    <td className="px-3 py-2 text-right text-white font-bold font-['Outfit']">{result.panel_count} Modules</td>
+                  </tr>
+                  <tr className="hover:bg-blue-900/20 transition">
+                    <td className="px-3 py-2 text-gray-300">Annual Generation</td>
+                    <td className="px-3 py-2 text-right text-white font-bold font-['Outfit']">{result.generation_kwh_yr.toLocaleString()} kWh/yr</td>
+                  </tr>
+                  <tr className="hover:bg-blue-900/20 transition">
+                    <td className="px-3 py-2 text-gray-300">Daily Average Generation</td>
+                    <td className="px-3 py-2 text-right text-white font-bold font-['Outfit']">{result.daily_generation_kwh} kWh/day</td>
+                  </tr>
+                  <tr className="hover:bg-blue-900/20 transition">
+                    <td className="px-3 py-2 text-gray-300">CO₂ Offset</td>
+                    <td className="px-3 py-2 text-right text-emerald-400 font-bold font-['Outfit']">{result.co2_offset_tons} tonnes/yr</td>
+                  </tr>
+                  <tr className="hover:bg-blue-900/20 transition">
+                    <td className="px-3 py-2 text-gray-300">Trees Equivalent</td>
+                    <td className="px-3 py-2 text-right text-emerald-300 font-bold font-['Outfit']">{result.trees_equivalent} trees/yr</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          {/* Financial Analysis */}
+          <div className="bg-gradient-to-br from-emerald-950/60 via-emerald-900/30 to-teal-950/60 border border-emerald-700/50 rounded-2xl p-4 space-y-3">
+            <div className="flex items-center gap-2">
+              <IndianRupee className="w-4 h-4 text-emerald-400" />
+              <h3 className="text-sm font-bold text-emerald-200 uppercase tracking-wider">Financial Analysis</h3>
+            </div>
+            <div className="overflow-x-auto">
+              <table className="w-full text-xs">
+                <thead>
+                  <tr className="bg-emerald-800/40">
+                    <th className="text-left px-3 py-2 text-emerald-200 font-bold rounded-tl-lg">Parameter</th>
+                    <th className="text-right px-3 py-2 text-emerald-200 font-bold rounded-tr-lg">Amount (INR)</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-emerald-800/30">
+                  <tr className="hover:bg-emerald-900/20 transition">
+                    <td className="px-3 py-2 text-gray-300">Estimated Gross Cost</td>
+                    <td className="px-3 py-2 text-right text-white font-bold font-['Outfit']">₹{result.total_cost_inr.toLocaleString()}</td>
+                  </tr>
+                  <tr className="hover:bg-emerald-900/20 transition">
+                    <td className="px-3 py-2 text-gray-300">PM Surya Ghar Subsidy (CFA)</td>
+                    <td className={`px-3 py-2 text-right font-bold font-['Outfit'] ${isHouseholder ? 'text-emerald-400' : 'text-gray-500'}`}>
+                      {isHouseholder ? `- ₹${result.subsidy_inr.toLocaleString()}` : '₹0 (Not Eligible)'}
+                    </td>
+                  </tr>
+                  <tr className="bg-emerald-900/30">
+                    <td className="px-3 py-2.5 text-white font-bold">Net Customer Investment</td>
+                    <td className="px-3 py-2.5 text-right text-emerald-300 font-extrabold text-sm font-['Outfit']">₹{result.net_cost_inr.toLocaleString()}</td>
+                  </tr>
+                  <tr className="hover:bg-emerald-900/20 transition">
+                    <td className="px-3 py-2 text-gray-300">Annual Electricity Savings</td>
+                    <td className="px-3 py-2 text-right text-white font-bold font-['Outfit']">₹{result.annual_savings_inr.toLocaleString()}/yr</td>
+                  </tr>
+                  <tr className="hover:bg-emerald-900/20 transition">
+                    <td className="px-3 py-2 text-gray-300">Payback Period</td>
+                    <td className="px-3 py-2 text-right text-amber-300 font-bold font-['Outfit']">{result.payback_years} Years</td>
+                  </tr>
+                  <tr className="hover:bg-emerald-900/20 transition">
+                    <td className="px-3 py-2 text-gray-300">25-Year Lifetime Savings</td>
+                    <td className="px-3 py-2 text-right text-amber-300 font-extrabold font-['Outfit']">₹{result.lifetime_savings_inr.toLocaleString()}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          {/* Disclaimer */}
+          <div className="bg-gray-800/40 border border-gray-700/40 rounded-xl px-4 py-3 text-[11px] text-gray-400 leading-relaxed">
+            <p><strong className="text-gray-300">Disclaimer:</strong> This is an automated feasibility report generated by SuryaScope based on satellite imagery and typical meteorological year (TMY) data. Obstructions (AC units, water tanks, etc.) have been excluded from the usable area. Actual costs and generation may vary based on site-specific factors like shading, roof tilt, and local vendor pricing.</p>
+          </div>
+        </div>
+
+        {/* Modal Footer — Download Button */}
+        <div className="p-5 border-t border-gray-700 bg-gray-900/95 flex items-center gap-3">
+          <button
+            onClick={onClose}
+            className="px-5 py-2.5 rounded-xl border border-gray-600 text-gray-300 hover:bg-gray-800 text-sm font-semibold transition"
+          >
+            Close
+          </button>
+          <button
+            onClick={onDownload}
+            disabled={exportingPdf}
+            className={`flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-xl font-bold text-white shadow-xl transition-all text-sm ${
+              exportingPdf
+                ? 'bg-gray-700 cursor-wait'
+                : 'bg-gradient-to-r from-amber-500 via-orange-500 to-rose-600 hover:from-amber-600 hover:to-orange-600 active:scale-[0.98] shadow-amber-500/20'
+            }`}
+          >
+            {exportingPdf ? (
+              <>
+                <Loader2 className="w-4 h-4 animate-spin" />
+                Generating PDF...
+              </>
+            ) : (
+              <>
+                <Download className="w-4 h-4" />
+                Download SuryaScope PDF Report
+              </>
+            )}
+          </button>
+        </div>
+      </div>
     </div>
   );
 }
