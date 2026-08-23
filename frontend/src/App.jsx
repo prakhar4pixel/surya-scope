@@ -61,8 +61,8 @@ function haversineDistance(p1, p2) {
   const a =
     Math.sin(dLat / 2) ** 2 +
     Math.cos((p1[0] * Math.PI) / 180) *
-      Math.cos((p2[0] * Math.PI) / 180) *
-      Math.sin(dLng / 2) ** 2;
+    Math.cos((p2[0] * Math.PI) / 180) *
+    Math.sin(dLng / 2) ** 2;
   return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 }
 
@@ -1059,6 +1059,10 @@ export default function App() {
 
   return (
     <div className="flex h-screen w-screen overflow-hidden bg-gray-950 font-sans text-gray-100">
+      {/* Test Diamond */}
+      <div className="absolute top-4 right-4 z-50 w-16 h-16 bg-blue-500 rotate-45 border-4 border-white shadow-2xl flex items-center justify-center">
+        <span className="-rotate-45 text-white font-bold text-xs">Test</span>
+      </div>
       {/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
           LEFT SIDEBAR: SuryaScope Analytics & Controls
       ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
@@ -1128,11 +1132,10 @@ export default function App() {
             <div className="grid grid-cols-2 gap-2">
               <button
                 onClick={() => startRoofDrawing('freehand')}
-                className={`flex items-center gap-2.5 px-3 py-2.5 rounded-xl border text-xs font-bold transition-all ${
-                  toolMode === 'freehand' && drawTarget === 'roof'
+                className={`flex items-center gap-2.5 px-3 py-2.5 rounded-xl border text-xs font-bold transition-all ${toolMode === 'freehand' && drawTarget === 'roof'
                     ? 'bg-amber-500 border-amber-400 text-gray-950 shadow-lg shadow-amber-500/20'
                     : 'bg-gray-800 border-gray-700 text-gray-200 hover:bg-gray-750 hover:border-amber-500/50 hover:text-white'
-                }`}
+                  }`}
               >
                 <PenTool className="w-4 h-4 text-amber-400" />
                 <div className="text-left">
@@ -1143,11 +1146,10 @@ export default function App() {
 
               <button
                 onClick={() => startRoofDrawing('polygon')}
-                className={`flex items-center gap-2.5 px-3 py-2.5 rounded-xl border text-xs font-bold transition-all ${
-                  toolMode === 'polygon' && drawTarget === 'roof'
+                className={`flex items-center gap-2.5 px-3 py-2.5 rounded-xl border text-xs font-bold transition-all ${toolMode === 'polygon' && drawTarget === 'roof'
                     ? 'bg-blue-600 border-blue-400 text-white shadow-lg shadow-blue-600/20'
                     : 'bg-gray-800 border-gray-700 text-gray-200 hover:bg-gray-750 hover:border-blue-500/50 hover:text-white'
-                }`}
+                  }`}
               >
                 <MousePointerClick className="w-4 h-4 text-blue-400" />
                 <div className="text-left">
@@ -1158,11 +1160,10 @@ export default function App() {
 
               <button
                 onClick={() => startRoofDrawing('rectangle')}
-                className={`flex items-center gap-2 px-3 py-2 rounded-xl border text-xs font-medium transition-all ${
-                  toolMode === 'rectangle' && drawTarget === 'roof'
+                className={`flex items-center gap-2 px-3 py-2 rounded-xl border text-xs font-medium transition-all ${toolMode === 'rectangle' && drawTarget === 'roof'
                     ? 'bg-blue-600 border-blue-400 text-white'
                     : 'bg-gray-800/80 border-gray-700 text-gray-300 hover:bg-gray-700 hover:text-white'
-                }`}
+                  }`}
               >
                 <Square className="w-3.5 h-3.5 text-cyan-400" />
                 <span>Box / Rectangle</span>
@@ -1171,13 +1172,12 @@ export default function App() {
               <button
                 onClick={() => setToolMode(toolMode === 'edit' ? null : 'edit')}
                 disabled={roofPoints.length < 3}
-                className={`flex items-center gap-2 px-3 py-2 rounded-xl border text-xs font-medium transition-all ${
-                  toolMode === 'edit'
+                className={`flex items-center gap-2 px-3 py-2 rounded-xl border text-xs font-medium transition-all ${toolMode === 'edit'
                     ? 'bg-purple-600 border-purple-400 text-white'
                     : roofPoints.length < 3
-                    ? 'opacity-40 cursor-not-allowed bg-gray-800 border-gray-700 text-gray-500'
-                    : 'bg-gray-800/80 border-gray-700 text-gray-300 hover:bg-gray-700 hover:text-white'
-                }`}
+                      ? 'opacity-40 cursor-not-allowed bg-gray-800 border-gray-700 text-gray-500'
+                      : 'bg-gray-800/80 border-gray-700 text-gray-300 hover:bg-gray-700 hover:text-white'
+                  }`}
               >
                 <Sliders className="w-3.5 h-3.5 text-purple-400" />
                 <span>{toolMode === 'edit' ? '✓ Done Editing' : 'Drag Vertices'}</span>
@@ -1209,11 +1209,10 @@ export default function App() {
                   <button
                     key={p.id}
                     onClick={() => startObstructionDrawing(p.label, p.id === 'tank' ? 'circle' : 'freehand')}
-                    className={`flex items-center gap-2 p-2 rounded-xl border text-xs font-medium text-left transition-all ${
-                      toolMode && drawTarget === 'obstruction' && currentObsLabel === p.label
+                    className={`flex items-center gap-2 p-2 rounded-xl border text-xs font-medium text-left transition-all ${toolMode && drawTarget === 'obstruction' && currentObsLabel === p.label
                         ? 'bg-red-600 border-red-400 text-white shadow-md'
                         : 'border-red-900/60 bg-red-950/40 text-red-200 hover:bg-red-900/40 hover:border-red-600'
-                    }`}
+                      }`}
                   >
                     <p.icon className="w-3.5 h-3.5 shrink-0 text-red-400" />
                     <span className="truncate">{p.label}</span>
@@ -1262,14 +1261,12 @@ export default function App() {
                 </div>
                 <button
                   onClick={() => setIsHouseholder(!isHouseholder)}
-                  className={`relative w-12 h-6 rounded-full transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-amber-500/50 ${
-                    isHouseholder ? 'bg-amber-500' : 'bg-gray-600'
-                  }`}
+                  className={`relative w-12 h-6 rounded-full transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-amber-500/50 ${isHouseholder ? 'bg-amber-500' : 'bg-gray-600'
+                    }`}
                 >
                   <span
-                    className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white shadow-md transition-transform duration-300 ${
-                      isHouseholder ? 'translate-x-6' : 'translate-x-0'
-                    }`}
+                    className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white shadow-md transition-transform duration-300 ${isHouseholder ? 'translate-x-6' : 'translate-x-0'
+                      }`}
                   />
                 </button>
               </div>
@@ -1410,11 +1407,10 @@ export default function App() {
           <button
             onClick={openReportPreview}
             disabled={!result}
-            className={`w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl font-bold text-white shadow-xl transition-all text-sm ${
-              !result
+            className={`w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl font-bold text-white shadow-xl transition-all text-sm ${!result
                 ? 'bg-gray-800 text-gray-500 border border-gray-700 cursor-not-allowed opacity-50'
                 : 'bg-gradient-to-r from-amber-500 via-orange-500 to-rose-600 hover:from-amber-600 hover:to-orange-600 active:scale-[0.98] shadow-amber-500/20'
-            }`}
+              }`}
           >
             <Eye className="w-4 h-4" />
             Preview &amp; Download Report
@@ -1484,28 +1480,27 @@ export default function App() {
         {/* ── Top Status Bar & Drawing Helper ── */}
         <div className="absolute top-4 left-1/2 -translate-x-1/2 bg-gray-900/90 backdrop-blur-md px-5 py-2 rounded-full shadow-2xl z-[1000] border border-gray-700/80 flex items-center gap-3">
           <span
-            className={`w-2.5 h-2.5 rounded-full ${
-              toolMode === 'freehand'
+            className={`w-2.5 h-2.5 rounded-full ${toolMode === 'freehand'
                 ? 'bg-amber-400 animate-ping'
                 : toolMode === 'polygon'
-                ? 'bg-blue-400 animate-pulse'
-                : toolMode === 'edit'
-                ? 'bg-purple-400 animate-pulse'
-                : roofPoints.length >= 3
-                ? 'bg-emerald-400'
-                : 'bg-gray-500'
-            }`}
+                  ? 'bg-blue-400 animate-pulse'
+                  : toolMode === 'edit'
+                    ? 'bg-purple-400 animate-pulse'
+                    : roofPoints.length >= 3
+                      ? 'bg-emerald-400'
+                      : 'bg-gray-500'
+              }`}
           />
           <span className="text-xs font-semibold text-gray-200">
             {toolMode === 'freehand'
               ? `✏️ Freehand Mode: Click and drag across ${drawTarget === 'roof' ? 'roof' : currentObsLabel} boundary`
               : toolMode === 'polygon'
-              ? `📐 Corner Mode: Click points (click 1st vertex to close)`
-              : toolMode === 'edit'
-              ? `✋ Edit Mode: Drag vertices or click '+' on edges to adjust`
-              : roofPoints.length >= 3
-              ? `SuryaScope Ready ✓ ${result?.usable_area_sqm} m² usable area calculated`
-              : `Select a tool to outline your rooftop`}
+                ? `📐 Corner Mode: Click points (click 1st vertex to close)`
+                : toolMode === 'edit'
+                  ? `✋ Edit Mode: Drag vertices or click '+' on edges to adjust`
+                  : roofPoints.length >= 3
+                    ? `SuryaScope Ready ✓ ${result?.usable_area_sqm} m² usable area calculated`
+                    : `Select a tool to outline your rooftop`}
           </span>
         </div>
 
@@ -1526,9 +1521,8 @@ export default function App() {
           <button
             onClick={handleUndo}
             disabled={history.length === 0}
-            className={`p-2.5 rounded-xl bg-gray-900/90 hover:bg-gray-800 text-gray-200 border border-gray-700 shadow-xl backdrop-blur-md transition ${
-              history.length === 0 ? 'opacity-40 cursor-not-allowed' : 'active:scale-95'
-            }`}
+            className={`p-2.5 rounded-xl bg-gray-900/90 hover:bg-gray-800 text-gray-200 border border-gray-700 shadow-xl backdrop-blur-md transition ${history.length === 0 ? 'opacity-40 cursor-not-allowed' : 'active:scale-95'
+              }`}
             title="Undo (Ctrl+Z)"
           >
             <RotateCcw className="w-4 h-4" />
@@ -1537,11 +1531,10 @@ export default function App() {
           {/* Solar Panel Array Grid Toggle */}
           <button
             onClick={() => setShowPanels(!showPanels)}
-            className={`p-2.5 rounded-xl border shadow-xl backdrop-blur-md transition ${
-              showPanels
+            className={`p-2.5 rounded-xl border shadow-xl backdrop-blur-md transition ${showPanels
                 ? 'bg-blue-600/90 border-blue-400 text-white'
                 : 'bg-gray-900/90 border-gray-700 text-gray-400 hover:text-white'
-            }`}
+              }`}
             title="Toggle Solar Panel Array Overlay"
           >
             <Sparkles className="w-4 h-4" />
@@ -1825,7 +1818,7 @@ function ReportPreviewModal({ result, address, isHouseholder, onGenerateReport, 
           >
             Close
           </button>
-          
+
           {isGenerating ? (
             <button
               disabled

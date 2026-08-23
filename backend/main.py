@@ -158,8 +158,10 @@ def generate_report_endpoint(req: CalculateRequest):
     from pdf_generator import generate_solar_report
     pdf_buffer = generate_solar_report(data)
     
-    return StreamingResponse(
-        pdf_buffer, 
+    from fastapi.responses import Response
+    
+    return Response(
+        content=pdf_buffer.getvalue(), 
         media_type="application/pdf", 
         headers={"Content-Disposition": "attachment; filename=SuryaScope_Report.pdf"}
     )
