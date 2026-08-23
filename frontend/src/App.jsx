@@ -584,8 +584,8 @@ function InteractiveDrawingEngine({
               }}
             />
           )}
-          {/* Live Segment Distance Badges */}
-          {draftPoints.map((pt, i) => {
+          {/* Live Segment Distance Badges — only for click-based polygon mode */}
+          {toolMode === 'polygon' && draftPoints.map((pt, i) => {
             if (i === 0) return null;
             const prev = draftPoints[i - 1];
             const mid = [(prev[0] + pt[0]) / 2, (prev[1] + pt[1]) / 2];
