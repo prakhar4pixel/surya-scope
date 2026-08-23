@@ -1039,7 +1039,7 @@ export default function App() {
 
       const response = await axios.post('/api/generate-report', payload, {
         responseType: 'blob',
-        timeout: 10000,
+        timeout: 30000,
       });
 
       const url = window.URL.createObjectURL(new Blob([response.data], { type: 'application/pdf' }));

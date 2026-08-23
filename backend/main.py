@@ -1,9 +1,14 @@
 from fastapi import FastAPI, HTTPException
-from fastapi.responses import StreamingResponse
+from fastapi.responses import Response
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing import List, Optional
 import math
+import sys
+import os
+
+# Ensure backend/ directory is on sys.path so pdf_generator can be imported on Vercel
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 app = FastAPI(title="SuryaScope API", description="API for Rooftop Solar Feasibility")
 
@@ -157,8 +162,6 @@ def generate_report_endpoint(req: CalculateRequest):
     
     from pdf_generator import generate_solar_report
     pdf_buffer = generate_solar_report(data)
-    
-    from fastapi.responses import Response
     
     return Response(
         content=pdf_buffer.getvalue(), 
